@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float movementSpeed = 1.5f;
+    public float movementSpeed = 10;
     public float mouseRotationSpeed = 2;
-    public float joystickRotationSpeed = 0.4f;
+    public float joystickRotationSpeed = 0.7f;
     public float jumpHeight = 5;
 
     private enum inputTypes { None, Keyboard, Controller }
@@ -18,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody rb;
     private GroundChecker gc;
-    private bool isOnGround, isOnWall, isMovementPaused;
+    private bool isOnGround, lastIsOnGround, isOnWall, isJumping, isMovementPaused;
 
     private void Start()
     {
@@ -34,13 +34,32 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!lastInputType.Equals(inputType))
-        {
-            // DO THING
+        Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        Vector2 controllerInputRight = new Vector2(Input.GetAxis("VerticalRight"), Input.GetAxis("HorizontalRight"));
 
-            lastInputType = inputType;
+        if (!mouseInput.Equals(Vector2.zero))
+        {
+            inputType = inputTypes.Keyboard;
+
+            if (!isMovementPaused)
+            {
+                transform.Rotate(0, mouseInput.x * mouseRotationSpeed, 0, Space.World);
+            }
         }
 
+        if (!controllerInputRight.Equals(Vector2.zero))
+        {
+            inputType = inputTypes.Controller;
+
+            if (!isMovementPaused)
+            {
+                transform.Rotate(0, controllerInputRight.x * joystickRotationSpeed, 0, Space.World);
+            }
+        }
+    }
+
+    private void FixedUpdate()
+    {
         checkControllerCount();
 
         if (lastControllerCount != controllerCount)
@@ -65,19 +84,17 @@ public class PlayerMovement : MonoBehaviour
             rb.drag = 3;
         }
 
-        Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        Vector2 controllerInputRight = new Vector2(Input.GetAxis("VerticalRight"), Input.GetAxis("HorizontalRight"));
-        Vector2 controllerInputLeft = new Vector2(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
-
-        if (!mouseInput.Equals(Vector2.zero))
+        if (lastIsOnGround != isOnGround)
         {
-            inputType = inputTypes.Keyboard;
-
-            if (!isMovementPaused)
+            if (isOnGround)
             {
-                transform.Rotate(0, mouseInput.x * mouseRotationSpeed, 0, Space.World);
+                isJumping = false;
             }
+
+            lastIsOnGround = isOnGround;
         }
+
+        Vector2 controllerInputLeft = new Vector2(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
 
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
@@ -99,25 +116,17 @@ public class PlayerMovement : MonoBehaviour
             movePlayer(inputTypes.Keyboard, -transform.right);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && isOnGround)
+        if (Input.GetKey(KeyCode.Space) && isOnGround && !isJumping)
         {
             inputType = inputTypes.Keyboard;
+
+            isJumping = true;
 
             if (!isMovementPaused)
             {
                 Invoke("limitDrag", jumpHeight / 30);
 
                 rb.velocity += Vector3.up * jumpHeight;
-            }
-        }
-
-        if (!controllerInputRight.Equals(Vector2.zero))
-        {
-            inputType = inputTypes.Controller;
-
-            if (!isMovementPaused)
-            {
-                transform.Rotate(0, controllerInputRight.x * joystickRotationSpeed, 0, Space.World);
             }
         }
 
@@ -141,9 +150,11 @@ public class PlayerMovement : MonoBehaviour
             movePlayer(inputTypes.Controller, -transform.right);
         }
 
-        if (Input.GetButtonDown("Jump") && isOnGround)
+        if (Input.GetButton("Jump") && isOnGround && !isJumping)
         {
             inputType = inputTypes.Controller;
+
+            isJumping = true;
 
             if (!isMovementPaused)
             {
@@ -153,6 +164,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        //print(Time.time + " " + isOnGround);
         //print("<b>[INPUT TYPE]:</b> " + inputType);
     }
 
@@ -214,6 +226,8 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void limitDrag() { rb.drag = -3; }
+
+    public void pauseMovement(bool value) { isMovementPaused = value; }
 
     private void movePlayer(inputTypes input, Vector3 dir)
     {

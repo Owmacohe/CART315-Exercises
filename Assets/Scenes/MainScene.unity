@@ -1000,9 +1000,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31ef95fad46d36e469f40fe5cf17c96d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 0.75
+  movementSpeed: 8
   mouseRotationSpeed: 2
-  joystickRotationSpeed: 0.4
+  joystickRotationSpeed: 0.7
   jumpHeight: 5
 --- !u!1 &1595733206
 GameObject:
