@@ -18,7 +18,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody rb;
     private GroundChecker gc;
-    private bool isOnGround, lastIsOnGround, isOnWall, isJumping, isMovementPaused;
+    private bool isOnGround, lastIsOnGround, isOnWall, isJumping;
+    [HideInInspector]
+    public bool isMovementPaused;
 
     private void Start()
     {
@@ -34,6 +36,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (rb.velocity.y >= 5)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        }
+
         Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
         Vector2 controllerInputRight = new Vector2(Input.GetAxis("VerticalRight"), Input.GetAxis("HorizontalRight"));
 
